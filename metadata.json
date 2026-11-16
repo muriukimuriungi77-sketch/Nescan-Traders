@@ -1,0 +1,6 @@
+{
+  "name": "Nescan Traders",
+  "description": "General provisions shop for sugar, rice, yellow beans, special beans, and household essentials with live inventory tracking and customer order management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

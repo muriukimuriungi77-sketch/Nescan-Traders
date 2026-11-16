@@ -1,0 +1,363 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "Shop inventory item bought for resale at Nescan Traders with buying cost, selling price, cumulative bought/sold totals, and current stock.",
+      "type": "object",
+      "properties": {
+        "sku": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 32,
+          "pattern": "^[A-Z0-9-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "category": {
+          "type": "string",
+          "enum": ["Sugar", "Rice", "Beans & Pulses", "Yellow Beans", "Special Beans", "Flour & Bakery", "Snacks & Sweets", "Household Essentials"]
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 30
+        },
+        "costPrice": {
+          "type": "number",
+          "description": "Wholesale buying cost per unit in KES."
+        },
+        "price": {
+          "type": "number",
+          "description": "Retail selling price per unit in KES."
+        },
+        "stockQuantity": {
+          "type": "number",
+          "description": "Current units remaining on hand."
+        },
+        "totalBought": {
+          "type": "number",
+          "description": "Cumulative units bought to sell at the shop."
+        },
+        "totalSold": {
+          "type": "number",
+          "description": "Cumulative units sold out of inventory."
+        },
+        "reorderLevel": {
+          "type": "number"
+        },
+        "supplierName": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "imageKey": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "description": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "isActive": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "sku",
+        "name",
+        "category",
+        "unit",
+        "costPrice",
+        "price",
+        "stockQuantity",
+        "totalBought",
+        "totalSold",
+        "reorderLevel",
+        "supplierName",
+        "imageKey",
+        "description",
+        "isActive",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "StockMovement": {
+      "title": "StockMovement",
+      "description": "Immutable ledger entry for stock bought (purchases), stock sold (outflow), and adjustments.",
+      "type": "object",
+      "properties": {
+        "productId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "productName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "category": {
+          "type": "string",
+          "enum": ["Sugar", "Rice", "Beans & Pulses", "Yellow Beans", "Special Beans", "Flour & Bakery", "Snacks & Sweets", "Household Essentials"]
+        },
+        "type": {
+          "type": "string",
+          "enum": ["purchase", "sale", "adjustment"]
+        },
+        "quantityDelta": {
+          "type": "number"
+        },
+        "previousStock": {
+          "type": "number"
+        },
+        "newStock": {
+          "type": "number"
+        },
+        "unitCost": {
+          "type": "number"
+        },
+        "unitPrice": {
+          "type": "number"
+        },
+        "totalValue": {
+          "type": "number"
+        },
+        "counterparty": {
+          "type": "string",
+          "maxLength": 100
+        },
+        "reason": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 200
+        },
+        "orderId": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "occurredAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "productId",
+        "productName",
+        "category",
+        "type",
+        "quantityDelta",
+        "previousStock",
+        "newStock",
+        "unitCost",
+        "unitPrice",
+        "totalValue",
+        "counterparty",
+        "reason",
+        "orderId",
+        "occurredAt",
+        "createdAt"
+      ]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer order managed from the Nescan Traders order desk.",
+      "type": "object",
+      "properties": {
+        "orderNumber": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 24,
+          "pattern": "^NT-[A-Z0-9-]+$"
+        },
+        "customerName": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 100
+        },
+        "customerPhone": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 24
+        },
+        "fulfillmentType": {
+          "type": "string",
+          "enum": ["pickup", "delivery"]
+        },
+        "deliveryAddress": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 300
+        },
+        "summaryText": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 300
+        },
+        "itemCount": {
+          "type": "number"
+        },
+        "totalAmount": {
+          "type": "number"
+        },
+        "paymentMethod": {
+          "type": "string",
+          "enum": ["cash", "mpesa", "credit"]
+        },
+        "paymentStatus": {
+          "type": "string",
+          "enum": ["unpaid", "paid"]
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "confirmed", "ready", "completed", "cancelled"]
+        },
+        "stockDeducted": {
+          "type": "boolean"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "orderNumber",
+        "customerName",
+        "customerPhone",
+        "fulfillmentType",
+        "deliveryAddress",
+        "notes",
+        "summaryText",
+        "itemCount",
+        "totalAmount",
+        "paymentMethod",
+        "paymentStatus",
+        "status",
+        "stockDeducted",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "OrderItem": {
+      "title": "OrderItem",
+      "description": "Line item belonging to a customer order.",
+      "type": "object",
+      "properties": {
+        "orderId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "productId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "productName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "sku": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 32
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 30
+        },
+        "unitPrice": {
+          "type": "number"
+        },
+        "quantity": {
+          "type": "number"
+        },
+        "subtotal": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "orderId",
+        "productId",
+        "productName",
+        "sku",
+        "unit",
+        "unitPrice",
+        "quantity",
+        "subtotal"
+      ]
+    },
+    "ShopSettings": {
+      "title": "ShopSettings",
+      "description": "Persisted shop preferences including low-stock threshold mode and starter catalog initialization flag.",
+      "type": "object",
+      "properties": {
+        "thresholdPreset": {
+          "type": "string",
+          "enum": ["item", "5", "10", "15", "25", "custom"]
+        },
+        "customThreshold": {
+          "type": "number"
+        },
+        "catalogInitialized": {
+          "type": "boolean"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "thresholdPreset",
+        "customThreshold",
+        "catalogInitialized",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Shop inventory items bought for resale with cost, price, and velocity totals."
+    },
+    "/stockMovements/{movementId}": {
+      "schema": { "$ref": "#/entities/StockMovement" },
+      "description": "Append-only ledger of purchases, sales, and adjustments."
+    },
+    "/orders/{orderId}": {
+      "schema": { "$ref": "#/entities/Order" },
+      "description": "Customer orders recorded and fulfilled at the shop."
+    },
+    "/orders/{orderId}/items/{itemId}": {
+      "schema": { "$ref": "#/entities/OrderItem" },
+      "description": "Line items for a shop order."
+    },
+    "/shopSettings/{settingId}": {
+      "schema": { "$ref": "#/entities/ShopSettings" },
+      "description": "Persisted shop settings and catalog initialization state."
+    }
+  }
+}

@@ -1,0 +1,253 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidCategory(category) {
+      return category in [
+        'Sugar',
+        'Rice',
+        'Beans & Pulses',
+        'Yellow Beans',
+        'Special Beans',
+        'Flour & Bakery',
+        'Snacks & Sweets',
+        'Household Essentials'
+      ];
+    }
+
+    function isValidProduct(data) {
+      return data.keys().hasAll([
+          'sku', 'name', 'category', 'unit', 'costPrice', 'price',
+          'stockQuantity', 'totalBought', 'totalSold', 'reorderLevel',
+          'supplierName', 'imageKey', 'description', 'isActive', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'sku', 'name', 'category', 'unit', 'costPrice', 'price',
+          'stockQuantity', 'totalBought', 'totalSold', 'reorderLevel',
+          'supplierName', 'imageKey', 'description', 'isActive', 'createdAt', 'updatedAt'
+        ])
+        && data.sku is string && data.sku.size() >= 2 && data.sku.size() <= 32 && data.sku.matches('^[A-Z0-9-]+$')
+        && data.name is string && data.name.size() >= 2 && data.name.size() <= 100
+        && data.category is string && isValidCategory(data.category)
+        && data.unit is string && data.unit.size() >= 1 && data.unit.size() <= 30
+        && data.costPrice is number && data.costPrice >= 0 && data.costPrice <= 10000000
+        && data.price is number && data.price >= 0 && data.price <= 10000000
+        && data.stockQuantity is number && data.stockQuantity >= 0 && data.stockQuantity <= 1000000
+        && data.totalBought is number && data.totalBought >= 0 && data.totalBought <= 10000000
+        && data.totalSold is number && data.totalSold >= 0 && data.totalSold <= 10000000
+        && data.reorderLevel is number && data.reorderLevel >= 0 && data.reorderLevel <= 100000
+        && data.supplierName is string && data.supplierName.size() <= 100
+        && data.imageKey is string && data.imageKey.size() >= 1 && data.imageKey.size() <= 120
+        && data.imageKey.matches('^/src/assets/images/[a-zA-Z0-9_.-]+$')
+        && data.description is string && data.description.size() <= 300
+        && data.isActive is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidStockMovement(data) {
+      return data.keys().hasAll([
+          'productId', 'productName', 'category', 'type', 'quantityDelta',
+          'previousStock', 'newStock', 'unitCost', 'unitPrice', 'totalValue',
+          'counterparty', 'reason', 'orderId', 'occurredAt', 'createdAt'
+        ])
+        && data.keys().hasOnly([
+          'productId', 'productName', 'category', 'type', 'quantityDelta',
+          'previousStock', 'newStock', 'unitCost', 'unitPrice', 'totalValue',
+          'counterparty', 'reason', 'orderId', 'occurredAt', 'createdAt'
+        ])
+        && data.productId is string && isValidId(data.productId)
+        && data.productName is string && data.productName.size() >= 1 && data.productName.size() <= 100
+        && data.category is string && isValidCategory(data.category)
+        && data.type in ['purchase', 'sale', 'adjustment']
+        && data.quantityDelta is number && data.quantityDelta != 0 && data.quantityDelta >= -100000 && data.quantityDelta <= 100000
+        && (data.type != 'purchase' || data.quantityDelta > 0)
+        && (data.type != 'sale' || data.quantityDelta < 0)
+        && data.previousStock is number && data.previousStock >= 0 && data.previousStock <= 1000000
+        && data.newStock is number && data.newStock >= 0 && data.newStock <= 1000000
+        && data.newStock == data.previousStock + data.quantityDelta
+        && data.unitCost is number && data.unitCost >= 0 && data.unitCost <= 10000000
+        && data.unitPrice is number && data.unitPrice >= 0 && data.unitPrice <= 10000000
+        && data.totalValue is number && data.totalValue >= 0 && data.totalValue <= 100000000
+        && data.counterparty is string && data.counterparty.size() <= 100
+        && data.reason is string && data.reason.size() >= 2 && data.reason.size() <= 200
+        && data.orderId is string && data.orderId.size() <= 128
+        && data.occurredAt is timestamp
+        && data.createdAt is timestamp;
+    }
+
+    function isValidOrder(data) {
+      return data.keys().hasAll([
+          'orderNumber', 'customerName', 'customerPhone',
+          'fulfillmentType', 'deliveryAddress', 'notes', 'summaryText',
+          'itemCount', 'totalAmount', 'paymentMethod', 'paymentStatus',
+          'status', 'stockDeducted', 'createdAt', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'orderNumber', 'customerName', 'customerPhone',
+          'fulfillmentType', 'deliveryAddress', 'notes', 'summaryText',
+          'itemCount', 'totalAmount', 'paymentMethod', 'paymentStatus',
+          'status', 'stockDeducted', 'createdAt', 'updatedAt'
+        ])
+        && data.orderNumber is string && data.orderNumber.size() >= 4 && data.orderNumber.size() <= 24 && data.orderNumber.matches('^NT-[A-Z0-9-]+$')
+        && data.customerName is string && data.customerName.size() >= 2 && data.customerName.size() <= 100
+        && data.customerPhone is string && data.customerPhone.size() >= 5 && data.customerPhone.size() <= 24
+        && data.fulfillmentType in ['pickup', 'delivery']
+        && data.deliveryAddress is string && data.deliveryAddress.size() <= 200
+        && data.notes is string && data.notes.size() <= 300
+        && data.summaryText is string && data.summaryText.size() >= 1 && data.summaryText.size() <= 300
+        && data.itemCount is number && data.itemCount >= 1 && data.itemCount <= 10000
+        && data.totalAmount is number && data.totalAmount > 0 && data.totalAmount <= 100000000
+        && data.paymentMethod in ['cash', 'mpesa', 'credit']
+        && data.paymentStatus in ['unpaid', 'paid']
+        && data.status in ['pending', 'confirmed', 'ready', 'completed', 'cancelled']
+        && data.stockDeducted is bool
+        && data.createdAt is timestamp
+        && data.updatedAt is timestamp;
+    }
+
+    function isValidOrderItem(data, orderId) {
+      return data.keys().hasAll([
+          'orderId', 'productId', 'productName', 'sku', 'unit', 'unitPrice', 'quantity', 'subtotal'
+        ])
+        && data.keys().hasOnly([
+          'orderId', 'productId', 'productName', 'sku', 'unit', 'unitPrice', 'quantity', 'subtotal'
+        ])
+        && data.orderId is string && data.orderId == orderId
+        && data.productId is string && isValidId(data.productId)
+        && data.productName is string && data.productName.size() >= 1 && data.productName.size() <= 100
+        && data.sku is string && data.sku.size() >= 2 && data.sku.size() <= 32
+        && data.unit is string && data.unit.size() >= 1 && data.unit.size() <= 30
+        && data.unitPrice is number && data.unitPrice > 0 && data.unitPrice <= 10000000
+        && data.quantity is number && data.quantity >= 1 && data.quantity <= 10000
+        && data.subtotal is number && data.subtotal > 0 && data.subtotal <= 100000000
+        && data.subtotal == data.unitPrice * data.quantity;
+    }
+
+    function isValidShopSettings(data) {
+      return data.keys().hasAll([
+          'thresholdPreset', 'customThreshold', 'catalogInitialized', 'updatedAt'
+        ])
+        && data.keys().hasOnly([
+          'thresholdPreset', 'customThreshold', 'catalogInitialized', 'updatedAt'
+        ])
+        && data.thresholdPreset in ['item', '5', '10', '15', '25', 'custom']
+        && data.customThreshold is number && data.customThreshold >= 1 && data.customThreshold <= 10000
+        && data.catalogInitialized is bool
+        && data.updatedAt is timestamp;
+    }
+
+    match /products/{productId} {
+      allow get: if isValidId(productId);
+      allow list: if true;
+      allow create: if isValidId(productId)
+        && isValidProduct(incoming())
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(productId)
+        && isValidProduct(incoming())
+        && incoming().sku == existing().sku
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'name', 'category', 'unit', 'costPrice', 'price',
+          'stockQuantity', 'totalBought', 'totalSold', 'reorderLevel',
+          'supplierName', 'imageKey', 'description', 'isActive', 'updatedAt'
+        ]);
+      allow delete: if isValidId(productId);
+    }
+
+    match /stockMovements/{movementId} {
+      allow get: if isValidId(movementId);
+      allow list: if true;
+      allow create: if isValidId(movementId)
+        && isValidStockMovement(incoming())
+        && existsAfter(/databases/$(database)/documents/products/$(incoming().productId))
+        && incoming().createdAt == request.time;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    match /orders/{orderId} {
+      allow get: if isValidId(orderId);
+      allow list: if true;
+      allow create: if isValidId(orderId)
+        && isValidOrder(incoming())
+        && (incoming().status == 'pending' || incoming().status == 'completed')
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(orderId)
+        && isValidOrder(incoming())
+        && incoming().orderNumber == existing().orderNumber
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && existing().status != 'cancelled'
+        && (
+          (existing().status == 'pending'
+            && incoming().status == 'confirmed'
+            && incoming().stockDeducted == true
+            && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'stockDeducted', 'updatedAt']))
+          || (existing().status == 'confirmed'
+            && incoming().status == 'ready'
+            && incoming().stockDeducted == existing().stockDeducted
+            && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']))
+          || (existing().status == 'ready'
+            && incoming().status == 'completed'
+            && incoming().stockDeducted == existing().stockDeducted
+            && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']))
+          || ((existing().status == 'pending' || existing().status == 'confirmed')
+            && incoming().status == 'cancelled'
+            && incoming().stockDeducted == false
+            && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'stockDeducted', 'updatedAt']))
+          || (incoming().status == existing().status
+            && incoming().stockDeducted == existing().stockDeducted
+            && incoming().diff(existing()).affectedKeys().hasOnly(['paymentStatus', 'paymentMethod', 'notes', 'updatedAt']))
+        );
+      allow delete: if false;
+
+      match /items/{itemId} {
+        allow get: if isValidId(orderId) && isValidId(itemId);
+        allow list: if isValidId(orderId);
+        allow create: if isValidId(orderId)
+          && isValidId(itemId)
+          && isValidOrderItem(incoming(), orderId)
+          && exists(/databases/$(database)/documents/products/$(incoming().productId))
+          && existsAfter(/databases/$(database)/documents/orders/$(orderId));
+        allow update: if false;
+        allow delete: if false;
+      }
+    }
+
+    match /shopSettings/{settingId} {
+      allow get: if isValidId(settingId);
+      allow list: if true;
+      allow create: if isValidId(settingId)
+        && isValidShopSettings(incoming())
+        && incoming().updatedAt == request.time;
+      allow update: if isValidId(settingId)
+        && isValidShopSettings(incoming())
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly([
+          'thresholdPreset', 'customThreshold', 'catalogInitialized', 'updatedAt'
+        ]);
+      allow delete: if false;
+    }
+  }
+}
